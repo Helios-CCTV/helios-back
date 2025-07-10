@@ -32,6 +32,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 
+    //web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+
+
     //json 테스트
     implementation 'org.json:json:20240303'
 }
