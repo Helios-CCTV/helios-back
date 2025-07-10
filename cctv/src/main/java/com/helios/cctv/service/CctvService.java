@@ -1,5 +1,6 @@
 package com.helios.cctv.service;
 
+import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,17 +17,21 @@ public class CctvService {
     @Value("${CCTV_API_KEY}")
     private String apiKey;
 
-    public String getCctv() {
+    public String getCctv(GetCctvRequest getCctvRequest) {
         StringBuilder sb = new StringBuilder();
         try {
+            String minX = Float.toString(getCctvRequest.getMinX());
+            String maxX = Float.toString(getCctvRequest.getMaxX());
+            String minY = Float.toString(getCctvRequest.getMinX());
+            String maxY = Float.toString(getCctvRequest.getMaxX());
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("all", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode("126.8", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode("127.2", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("minY", "UTF-8") + "=" + URLEncoder.encode("37.4", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("maxY", "UTF-8") + "=" + URLEncoder.encode("37.7", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("3", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("minY", "UTF-8") + "=" + URLEncoder.encode(minY, "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("maxY", "UTF-8") + "=" + URLEncoder.encode(maxY, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("getType", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8"));
 
             URL url = new URL(urlBuilder.toString());

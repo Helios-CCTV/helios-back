@@ -1,5 +1,6 @@
 package com.helios.cctv.controller;
 
+import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import com.helios.cctv.service.CctvService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +14,8 @@ public class CctvController {
     private final CctvService cctvService;
 
     @GetMapping
-    public ResponseEntity<String> getCctv() {
+    public ResponseEntity<String> getCctv(@RequestBody GetCctvRequest getCctvRequest) {
 
-        return ResponseEntity.ok(cctvService.getCctv());
+        return ResponseEntity.ok(cctvService.getCctv(getCctvRequest));
     }
 }
