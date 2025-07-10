@@ -6,6 +6,6 @@ import lombok.Data;
 public class GetCctvRequest {
     private float minX;
     private float maxX;
+    private float minY;
     private float maxY;
-    private float maxZ;
 }

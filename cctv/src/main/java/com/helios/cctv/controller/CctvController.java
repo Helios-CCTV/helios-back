@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
+@CrossOrigin("http://localhost:4000/")
 @RequestMapping("/cctv")
 public class CctvController {
 
     private final CctvService cctvService;
 
     @GetMapping
-    public ResponseEntity<String> getCctv(@RequestBody GetCctvRequest getCctvRequest) {
+    public ResponseEntity<String> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
 
         return ResponseEntity.ok(cctvService.getCctv(getCctvRequest));
     }
