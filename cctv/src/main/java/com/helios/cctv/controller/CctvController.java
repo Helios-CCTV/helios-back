@@ -16,7 +16,7 @@ public class CctvController {
 
     @GetMapping
     public ResponseEntity<String> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
-
+        //화면 축소시 반환할 마커 찍기 구현
         return ResponseEntity.ok(cctvService.getCctv(getCctvRequest));
     }
 }
