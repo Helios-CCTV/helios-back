@@ -9,25 +9,25 @@ import java.time.LocalDateTime;
 public class RegionDTO {
 
     private Integer id;                   // 고유 ID
-    private String admSectC;              // 행정구역 코드
-    private String sggNm;                 // 행정구역 이름
-    private Integer sggOid;               // SGG OID
-    private String colAdmSe;              // 컬럼 코드
+    private String adm_sect_c;              // 행정구역 코드
+    private String sgg_nm;                 // 행정구역 이름
+    private Integer sgg_oid;               // SGG OID
+    private String col_adm_se;              // 컬럼 코드
     private Geometry polygon;             // 경계 (Polygon 또는 MultiPolygon)
-    private LocalDateTime createdAt;      // 생성 시각
-    private LocalDateTime updatedAt;      // 업데이트 시각
+    private LocalDateTime created_at;      // 생성 시각
+    private LocalDateTime updated_at;      // 업데이트 시각
 
     @Override
     public String toString() {
         return "RegionDTO{" +
                 "id=" + id +
-                ", admSectC='" + admSectC + '\'' +
-                ", sggNm='" + sggNm + '\'' +
-                ", sggOid=" + sggOid +
-                ", colAdmSe='" + colAdmSe + '\'' +
+                ", admSectC='" + adm_sect_c + '\'' +
+                ", sggNm='" + sgg_nm + '\'' +
+                ", sggOid=" + sgg_oid +
+                ", colAdmSe='" + col_adm_se + '\'' +
                 ", polygon=" + polygon +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
+                ", createdAt=" + created_at +
+                ", updatedAt=" + updated_at +
                 '}';
     }
 }
