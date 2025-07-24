@@ -1,4 +1,4 @@
-package com.helios.cctv.dto.cctv;
+package com.helios.cctv.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

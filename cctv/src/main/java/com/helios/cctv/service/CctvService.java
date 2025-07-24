@@ -1,6 +1,6 @@
 package com.helios.cctv.service;
 
-import com.helios.cctv.dto.cctv.ApiResponse;
+import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
