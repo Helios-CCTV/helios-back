@@ -1,8 +1,10 @@
 package com.helios.cctv.service;
 
+import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -17,7 +19,7 @@ public class CctvService {
     @Value("${CCTV_API_KEY}")
     private String apiKey;
 
-    public String getCctv(GetCctvRequest getCctvRequest) {
+    public ApiResponse<String> getCctv(GetCctvRequest getCctvRequest) {
         StringBuilder sb = new StringBuilder();
         try {
             String minX = Float.toString(getCctvRequest.getMinX());
@@ -55,10 +57,11 @@ public class CctvService {
 
             // JSON 예쁘게 포맷
             JSONObject json = new JSONObject(sb.toString());
-            return json.toString(4);
+            return ApiResponse.ok(json.toString(4),200);
 
         } catch (Exception e) {
-            return "Error fetching CCTV info: " + e.getMessage();
+            return ApiResponse.fail("Error fetching CCTV info: " + e.getMessage(),500);
+
 
         }
     }
