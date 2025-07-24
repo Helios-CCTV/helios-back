@@ -35,6 +35,12 @@ dependencies {
     //web
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // MyBatis Spring Boot 연동
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    // MySQL JDBC 드라이버
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+    //region Type
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
 
 
     //json 테스트
