@@ -1,5 +1,6 @@
 package com.helios.cctv.controller;
 
+import com.helios.cctv.dto.cctv.ApiResponse;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import com.helios.cctv.service.CctvService;
 import lombok.AllArgsConstructor;
@@ -14,9 +15,13 @@ public class CctvController {
 
     private final CctvService cctvService;
 
-    @GetMapping
-    public ResponseEntity<String> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
-
-        return ResponseEntity.ok(cctvService.getCctv(getCctvRequest));
+    @GetMapping("/view")
+    public ResponseEntity<ApiResponse<String>> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
+        ApiResponse<String> apiResponse = cctvService.getCctv(getCctvRequest);
+        if (apiResponse.isSuccess()) {
+            return ResponseEntity.ok(apiResponse);
+        } else {
+            return ResponseEntity.badRequest().body(apiResponse);
+        }
     }
 }
