@@ -16,18 +16,4 @@ public class RegionDTO {
     private Geometry polygon;             // 경계 (Polygon 또는 MultiPolygon)
     private LocalDateTime created_at;      // 생성 시각
     private LocalDateTime updated_at;      // 업데이트 시각
-
-    @Override
-    public String toString() {
-        return "RegionDTO{" +
-                "id=" + id +
-                ", admSectC='" + adm_sect_c + '\'' +
-                ", sggNm='" + sgg_nm + '\'' +
-                ", sggOid=" + sgg_oid +
-                ", colAdmSe='" + col_adm_se + '\'' +
-                ", polygon=" + polygon +
-                ", createdAt=" + created_at +
-                ", updatedAt=" + updated_at +
-                '}';
-    }
 }
