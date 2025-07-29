@@ -17,3 +17,12 @@ mybatis:
   type-aliases-package: com.helios.cctv.dto
   type-handlers-package: com.helios.cctv.config
 
+logging:
+  level:
+    root: info
+    org.mybatis: debug         # MyBatis 실행 쿼리 로그
+    jdbc.sqlonly: debug
+    jdbc.resultset: debug
+    org.springframework.jdbc: debug
+    org.springframework.transaction: debug
+    com.zaxxer.hikari: debug   # DB 연결 문제 추적

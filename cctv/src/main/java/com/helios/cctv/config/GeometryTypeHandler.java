@@ -16,11 +16,15 @@ import java.sql.SQLException;
 public class GeometryTypeHandler implements TypeHandler<Geometry> {
 
     private final WKBReader reader = new WKBReader();
-    private final WKBWriter writer = new WKBWriter();
+    private final WKBWriter writer = new WKBWriter(2, true); // SRID 포함 설정
 
-
+    @Override
     public void setParameter(PreparedStatement ps, int i, Geometry parameter, JdbcType jdbcType) throws SQLException {
-        ps.setBytes(i, writer.write(parameter));
+        if (parameter != null) {
+            ps.setBytes(i, writer.write(parameter)); // SRID 포함된 WKB 바이트로 변환
+        } else {
+            ps.setNull(i, java.sql.Types.BINARY);
+        }
     }
 
     @Override

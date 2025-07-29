@@ -21,4 +21,13 @@
             updated_at
         FROM regions;
     </select>
+
+    <!-- cctv point에 해당하는 폴리곤 찾기 -->
+    <select id="findRegionIdByPoint" resultType="int">
+        SELECT id
+        FROM regions
+        WHERE ST_Contains(polygon, ST_GeomFromText(#{wkt}, 5186))
+            LIMIT 1
+    </select>
+
 </mapper>
