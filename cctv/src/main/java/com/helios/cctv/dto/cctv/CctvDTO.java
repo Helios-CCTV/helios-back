@@ -14,6 +14,7 @@ public class CctvDTO {
     private double latitude;
     private double longitude;
     private Point point; // PostGIS 또는 Geometry 라이브러리를 쓰면 적절히 타입 수정
+    private String wkt;
     private String status;
     private int regionId;
     private LocalDateTime createdAt;

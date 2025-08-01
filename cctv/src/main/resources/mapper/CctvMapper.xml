@@ -11,7 +11,7 @@
                    #{cctv.location},
                    #{cctv.latitude},
                    #{cctv.longitude},
-                   #{cctv.point, typeHandler=com.helios.cctv.config.GeometryTypeHandler},
+                   ST_GeomFromText(#{cctv.wkt}, 5186),
                    #{cctv.regionId},
                    'active'
                )

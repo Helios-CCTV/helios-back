@@ -152,6 +152,7 @@ public class CctvService {
                 cctv.setLatitude(coordy);    // 위도
                 cctv.setLongitude(coordx);   // 경도
                 cctv.setPoint(point);
+                cctv.setWkt(wkt);
                 cctv.setRegionId(regionId);
 
                 cctvMapper.insert(cctv);
