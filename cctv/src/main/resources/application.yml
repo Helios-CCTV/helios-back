@@ -26,3 +26,13 @@ logging:
     org.springframework.jdbc: debug
     org.springframework.transaction: debug
     com.zaxxer.hikari: debug   # DB 연결 문제 추적
+
+cctv:
+  capture:
+    output-dir: "C:\\Net-Challenge\\capture"
+    width: 1920
+    height: 1080
+    seconds-to-capture: 20   # 총 20초 읽기
+    fps: 1                   # 초당 1장 => 총 20장
+    ffmpeg-path: "C:\\Net-Challenge\\ffmpeg-7.1.1-essentials_build\\bin\\ffmpeg.exe"    # PATH에 있으면 'ffmpeg', 아니면 "C:/ffmpeg/bin/ffmpeg.exe" 식 절대경로
+    max-parallel: 4
