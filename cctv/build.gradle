@@ -31,6 +31,16 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    //cctv 이미지 저장
+    //implementation 'org.springframework.boot:spring-boot-starter-scheduling'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.1'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor' // ★ IDE 메타데이터
+    
+    //로그
+    implementation 'org.slf4j:slf4j-api:2.0.13'
+
 
     //web
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -41,6 +51,9 @@ dependencies {
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
     //region Type
     implementation 'org.locationtech.jts:jts-core:1.19.0'
+
+    //좌표 변환
+    implementation 'org.locationtech.proj4j:proj4j:1.1.0'
 
 
     //json 테스트

@@ -1,10 +1,22 @@
 package com.helios.cctv.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.helios.cctv.dto.ApiResponse;
+import com.helios.cctv.dto.cctv.CctvApiDTO;
+import com.helios.cctv.dto.cctv.CctvDTO;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
-import org.json.JSONObject;
+import com.helios.cctv.mapper.CctvMapper;
+import com.helios.cctv.mapper.RegionMapper;
+import com.helios.cctv.util.CoordinateConverter;
+import com.helios.cctv.util.GeometryUtil;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.io.WKTWriter;
+import org.locationtech.proj4j.ProjCoordinate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -12,14 +24,42 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CctvService {
 
+    private final RegionMapper regionMapper;
+    private final CctvMapper cctvMapper;
+
+
     @Value("${CCTV_API_KEY}")
     private String apiKey;
 
-    public ApiResponse<String> getCctv(GetCctvRequest getCctvRequest) {
+    //Mapper 초기화
+    public CctvService(RegionMapper regionMapper, CctvMapper cctvMapper) {
+        this.regionMapper = regionMapper;
+        this.cctvMapper = cctvMapper;
+    }
+
+    //cctv 조회 -> controller
+    public ApiResponse<List<CctvApiDTO>> getCctv(GetCctvRequest request) {
+        try {
+            List<CctvApiDTO> list = getCctvApi(request);
+            return ApiResponse.ok(list,200);
+        } catch (Exception e) {
+            return ApiResponse.fail("CCTV조회 실패",500);
+        }
+    }
+
+    //cctv 조회 api
+    public List<CctvApiDTO> getCctvApi(GetCctvRequest getCctvRequest) {
+        //type 1 : 실시간 스트리밍
+        //type 2 : 동영상
+        //type 3 : 정지 영상
+        //type 4 : 실시간 스트리밍 https
+        //type 5 : 동영상 https
         StringBuilder sb = new StringBuilder();
         try {
             String minX = Float.toString(getCctvRequest.getMinX());
@@ -28,7 +68,7 @@ public class CctvService {
             String maxY = Float.toString(getCctvRequest.getMaxY());
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("all", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("its", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));
@@ -55,14 +95,79 @@ public class CctvService {
             rd.close();
             conn.disconnect();
 
-            // JSON 예쁘게 포맷
-            JSONObject json = new JSONObject(sb.toString());
-            return ApiResponse.ok(json.toString(4),200);
+            // 1. JSON 문자열 받기
+            String jsonString = sb.toString();
 
+            // 2. Jackson 파서 준비
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(jsonString);
+
+            // 3. data 배열만 추출
+            JsonNode dataArray = rootNode.path("response").path("data");
+
+            // 4. DTO 리스트로 변환
+            List<CctvApiDTO> cctvList = new ArrayList<>();
+            for (JsonNode node : dataArray) {
+                CctvApiDTO dto = new CctvApiDTO();
+                dto.setRoadsectionid(node.path("roadsectionid").asText());
+                dto.setFilecreatetime(node.path("filecreatetime").asText());
+                dto.setCctvtype(String.valueOf(node.path("cctvtype").asInt())); // int → String
+                dto.setCctvurl(node.path("cctvurl").asText());
+                dto.setCctvresolution(node.path("cctvresolution").asText());
+                dto.setCoordx(String.valueOf(node.path("coordx").asDouble())); // double → String
+                dto.setCoordy(String.valueOf(node.path("coordy").asDouble()));
+                dto.setCctvformat(node.path("cctvformat").asText());
+                dto.setCctvname(node.path("cctvname").asText());
+
+                cctvList.add(dto);
+            }
+
+            // 이제 여기서 cctvList를 반환하면 됩니다
+            return cctvList;
         } catch (Exception e) {
-            return ApiResponse.fail("Error fetching CCTV info: " + e.getMessage(),500);
+            return null;
+        }
+    }
+
+    //cctv 저장
+    public ApiResponse<Void> saveCctv(GetCctvRequest getCctvRequest) {
+        try{
+            List<CctvApiDTO> cctvApiList = getCctvApi(getCctvRequest);
+            for (CctvApiDTO dto : cctvApiList) {
+                double coordx = Double.parseDouble(dto.getCoordx());
+                double coordy = Double.parseDouble(dto.getCoordy());
+
+                // 1. 위경도 좌표 → EPSG:5186 변환
+                ProjCoordinate tmCoord = CoordinateConverter.to5186(coordx, coordy);
+
+                // 2. Point 객체 생성 (JTS)
+                GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 5186);
+                Point point = geometryFactory.createPoint(new Coordinate(tmCoord.x, tmCoord.y));
+                point.setSRID(5186);
+
+                // 3. WKT 생성
+                String wkt = new WKTWriter().write(point);
+
+                // 포함된 Region 찾기
+                Integer regionId = regionMapper.findRegionIdByPoint(wkt);  // null일 수 있음
 
 
+                // CCTV 저장
+                CctvDTO cctv = new CctvDTO();
+                cctv.setLocation(dto.getCctvname());
+                cctv.setLatitude(coordy);    // 위도
+                cctv.setLongitude(coordx);   // 경도
+                cctv.setPoint(point);
+                cctv.setWkt(wkt);
+                cctv.setRegionId(regionId);
+
+                cctvMapper.insert(cctv);
+            }
+            return ApiResponse.ok(null,200);
+        } catch (Exception e) {
+            e.printStackTrace(); // 콘솔에 전체 오류 스택 출력
+            //log.error("insert 오류 발생", e); // 로그로도 출력
+            return ApiResponse.fail("저장 실패",500);
         }
     }
 }
