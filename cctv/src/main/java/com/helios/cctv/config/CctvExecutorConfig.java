@@ -10,14 +10,14 @@ import java.util.concurrent.Executor;
 @Configuration
 public class CctvExecutorConfig {
 
-    @Bean("cctvExecutor")
-    public Executor cctvExecutor(CctvProperties props) {
-        var cap = props.getCapture();
-        var ex = new ThreadPoolTaskExecutor();
-        ex.setCorePoolSize(cap.getMaxParallel());
-        ex.setMaxPoolSize(cap.getMaxParallel());
-        ex.setQueueCapacity(100);
+    @Bean(name = "cctvExecutor")
+    public ThreadPoolTaskExecutor cctvExecutor() {
+        ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+        ex.setCorePoolSize(4);              // 필요시 프로퍼티로 뺄 것
+        ex.setMaxPoolSize(4);
+        ex.setQueueCapacity(1000);
         ex.setThreadNamePrefix("cctv-");
+        ex.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         ex.initialize();
         return ex;
     }

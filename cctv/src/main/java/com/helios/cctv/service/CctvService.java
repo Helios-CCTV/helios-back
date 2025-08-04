@@ -55,6 +55,11 @@ public class CctvService {
 
     //cctv 조회 api
     public List<CctvApiDTO> getCctvApi(GetCctvRequest getCctvRequest) {
+        //type 1 : 실시간 스트리밍
+        //type 2 : 동영상
+        //type 3 : 정지 영상
+        //type 4 : 실시간 스트리밍 https
+        //type 5 : 동영상 https
         StringBuilder sb = new StringBuilder();
         try {
             String minX = Float.toString(getCctvRequest.getMinX());
@@ -63,7 +68,7 @@ public class CctvService {
             String maxY = Float.toString(getCctvRequest.getMaxY());
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("all", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("its", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));
@@ -124,6 +129,7 @@ public class CctvService {
         }
     }
 
+    //cctv 저장
     public ApiResponse<Void> saveCctv(GetCctvRequest getCctvRequest) {
         try{
             List<CctvApiDTO> cctvApiList = getCctvApi(getCctvRequest);
