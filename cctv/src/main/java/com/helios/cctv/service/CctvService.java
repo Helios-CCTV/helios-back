@@ -6,8 +6,11 @@ import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.CctvApiDTO;
 import com.helios.cctv.dto.cctv.CctvDTO;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
+import com.helios.cctv.dto.cluster.ClusterItem;
+import com.helios.cctv.dto.cluster.RegionClusterRow;
 import com.helios.cctv.mapper.CctvMapper;
 import com.helios.cctv.mapper.RegionMapper;
+import com.helios.cctv.util.CoordTransform;
 import com.helios.cctv.util.CoordinateConverter;
 import com.helios.cctv.util.GeometryUtil;
 import org.locationtech.jts.geom.Coordinate;
@@ -32,22 +35,56 @@ public class CctvService {
 
     private final RegionMapper regionMapper;
     private final CctvMapper cctvMapper;
+    private final CoordTransform coord;
 
 
     @Value("${CCTV_API_KEY}")
     private String apiKey;
 
     //Mapper 초기화
-    public CctvService(RegionMapper regionMapper, CctvMapper cctvMapper) {
+    public CctvService(RegionMapper regionMapper, CctvMapper cctvMapper, CoordTransform coord) {
         this.regionMapper = regionMapper;
         this.cctvMapper = cctvMapper;
+        this.coord = coord;
     }
 
     //cctv 조회 -> controller
-    public ApiResponse<List<CctvApiDTO>> getCctv(GetCctvRequest request) {
+    public ApiResponse<?> getCctv(GetCctvRequest request) {
         try {
-            List<CctvApiDTO> list = getCctvApi(request);
-            return ApiResponse.ok(list,200);
+            if (request.getLevel() <= 7) { //Detail 축소/확대값이 7보다 작거나 같을때
+                List<CctvApiDTO> list = getCctvApi(request);
+                return ApiResponse.ok(list,200);
+            } else { //Cluster 위 조건문 외
+                CoordTransform.Bounds b5186 = coord.to5186(request.getMinX(), request.getMinY(), request.getMaxX(), request.getMaxY());
+                String boundsWkt = String.format(
+                        java.util.Locale.US,
+                        "POLYGON((%f %f, %f %f, %f %f, %f %f, %f %f))",
+                        b5186.minX(), b5186.minY(),
+                        b5186.maxX(), b5186.minY(),
+                        b5186.maxX(), b5186.maxY(),
+                        b5186.minX(), b5186.maxY(),
+                        b5186.minX(), b5186.minY()
+                );
+                // 2) 시군구(구) 단위 대표점 + CCTV 개수 집계 (DB는 5186)
+                List<RegionClusterRow> rows = regionMapper.findRegionClustersInBounds(boundsWkt);
+                double tol = coord.simplifyToleranceMeters(request.getLevel());
+
+                // 3) 대표점(5186) → WGS84 변환해서 응답
+                List<ClusterItem> clusters = rows.stream().map(r -> {
+                    CoordTransform.LngLat wgs = coord.to4326(r.getX(), r.getY()); // x,y: 5186
+                    String geojson = coord.wkt5186ToGeoJson4326(r.getPolygonWkt(), tol);
+                    return new ClusterItem(
+                            r.getRegionId(),
+                            r.getName(),
+                            wgs.lat(), wgs.lng(),
+                            r.getCount(),
+                            geojson
+                    );
+                }).toList();
+
+                return ApiResponse.ok(clusters,200);
+            }
+
         } catch (Exception e) {
             return ApiResponse.fail("CCTV조회 실패",500);
         }

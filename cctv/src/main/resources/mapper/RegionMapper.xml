@@ -30,4 +30,18 @@
             LIMIT 1
     </select>
 
+    <select id="findRegionClustersInBounds"
+            parameterType="string"
+            resultType="com.helios.cctv.dto.cluster.RegionClusterRow">
+        SELECT
+            r.id    AS regionId,
+            r.sgg_nm AS name,
+            ST_X(ST_Centroid(r.polygon)) AS x,
+            ST_Y(ST_Centroid(r.polygon)) AS y,
+            (SELECT COUNT(*) FROM cctvs c WHERE c.region_id = r.id) AS count,
+            ST_AsText(r.polygon) AS polygonWkt   -- ★ WKT 추가
+        FROM regions r
+        WHERE ST_Intersects(r.polygon, ST_GeomFromText(#{bounds5186}, 5186));
+    </select>
+
 </mapper>

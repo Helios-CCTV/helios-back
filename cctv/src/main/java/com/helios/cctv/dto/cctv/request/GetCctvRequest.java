@@ -8,4 +8,5 @@ public class GetCctvRequest {
     private float maxX;
     private float minY;
     private float maxY;
+    private int level;
 }

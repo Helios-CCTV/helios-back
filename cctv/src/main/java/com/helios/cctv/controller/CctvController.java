@@ -19,8 +19,8 @@ public class CctvController {
     private final CctvService cctvService;
 
     @GetMapping("/view")
-    public ResponseEntity<ApiResponse<List<CctvApiDTO>>> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
-        ApiResponse<List<CctvApiDTO>> apiResponse = cctvService.getCctv(getCctvRequest);
+    public ResponseEntity<ApiResponse<?>> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
+        ApiResponse<?> apiResponse = cctvService.getCctv(getCctvRequest);
         if (apiResponse.isSuccess()) {
             return ResponseEntity.ok(apiResponse);
         } else {
