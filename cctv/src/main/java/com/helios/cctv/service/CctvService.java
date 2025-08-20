@@ -12,7 +12,6 @@ import com.helios.cctv.mapper.CctvMapper;
 import com.helios.cctv.mapper.RegionMapper;
 import com.helios.cctv.util.CoordTransform;
 import com.helios.cctv.util.CoordinateConverter;
-import com.helios.cctv.util.GeometryUtil;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -51,7 +50,7 @@ public class CctvService {
     //cctv 조회 -> controller
     public ApiResponse<?> getCctv(GetCctvRequest request) {
         try {
-            if (request.getLevel() <= 7) { //Detail 축소/확대값이 7보다 작거나 같을때
+            if (true){//(request.getLevel() <= 7) { //Detail 축소/확대값이 7보다 작거나 같을때
                 List<CctvApiDTO> list = getCctvApi(request);
                 return ApiResponse.ok(list,200);
             } else { //Cluster 위 조건문 외
@@ -97,6 +96,7 @@ public class CctvService {
         //type 3 : 정지 영상
         //type 4 : 실시간 스트리밍 https
         //type 5 : 동영상 https
+        //its 국도, ex 고속도로
         StringBuilder sb = new StringBuilder();
         try {
             String minX = Float.toString(getCctvRequest.getMinX());
@@ -105,8 +105,8 @@ public class CctvService {
             String maxY = Float.toString(getCctvRequest.getMaxY());
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("its", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("4", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("ex", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minY", "UTF-8") + "=" + URLEncoder.encode(minY, "UTF-8"));
