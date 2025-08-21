@@ -11,6 +11,12 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: ${DB_DRIVER}
+  jpa:
+    properties:
+      hibernate.jdbc.batch_size: 500
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+  # JDBC URL에 추가: ?rewriteBatchedStatements=true&useServerPrepStmts=true
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

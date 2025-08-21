@@ -8,10 +8,13 @@ import com.helios.cctv.dto.cctv.CctvDTO;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import com.helios.cctv.dto.cluster.ClusterItem;
 import com.helios.cctv.dto.cluster.RegionClusterRow;
+import com.helios.cctv.entity.cctv.Cctv;
 import com.helios.cctv.mapper.CctvMapper;
 import com.helios.cctv.mapper.RegionMapper;
+import com.helios.cctv.repository.CctvRepository;
 import com.helios.cctv.util.CoordTransform;
 import com.helios.cctv.util.CoordinateConverter;
+import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -23,6 +26,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -30,24 +35,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CctvService {
 
     private final RegionMapper regionMapper;
     private final CctvMapper cctvMapper;
     private final CoordTransform coord;
+    private final CctvRepository cctvRepository;
 
 
     @Value("${CCTV_API_KEY}")
     private String apiKey;
 
-    //Mapper 초기화
-    public CctvService(RegionMapper regionMapper, CctvMapper cctvMapper, CoordTransform coord) {
-        this.regionMapper = regionMapper;
-        this.cctvMapper = cctvMapper;
-        this.coord = coord;
-    }
+    //cctv 조회 -> controller 사용 X
 
-    //cctv 조회 -> controller
     public ApiResponse<?> getCctv(GetCctvRequest request) {
         try {
             if (true){//(request.getLevel() <= 7) { //Detail 축소/확대값이 7보다 작거나 같을때
@@ -88,6 +89,7 @@ public class CctvService {
             return ApiResponse.fail("CCTV조회 실패",500);
         }
     }
+
 
     //cctv 조회 api
     public List<CctvApiDTO> getCctvApi(GetCctvRequest getCctvRequest) {
@@ -139,6 +141,7 @@ public class CctvService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(jsonString);
 
+            System.out.println(rootNode);
             // 3. data 배열만 추출
             JsonNode dataArray = rootNode.path("response").path("data");
 
@@ -207,4 +210,52 @@ public class CctvService {
             return ApiResponse.fail("저장 실패",500);
         }
     }
+
+    //cctv 조회
+    public ApiResponse<List<CctvApiDTO>> findInBoundsAsDto(GetCctvRequest request) {
+        try{
+            double xMin = Math.min(request.getMinX(), request.getMaxX());
+            double xMax = Math.max(request.getMinX(), request.getMaxX());
+            double yMin = Math.min(request.getMinY(), request.getMaxY());
+            double yMax = Math.max(request.getMinY(), request.getMaxY());
+
+            List<Cctv> entities = cctvRepository.findWithinBoundsByRoadType(xMin, xMax, yMin, yMax,"EX"); //추가
+
+            List<CctvApiDTO> list = entities.stream()
+                    .map(this::toDto)
+                    .toList();
+            return ApiResponse.ok(list,200);
+        } catch (Exception e) {
+            return ApiResponse.fail("조회실패",500);
+        }
+    }
+
+    //Entity -> DTO 변환
+    private CctvApiDTO toDto(Cctv c) {
+        CctvApiDTO dto = new CctvApiDTO();
+        dto.setRoadsectionid(nvl(c.getRoadsectionid()));
+        dto.setFilecreatetime(nvl(c.getFilecreatetime()));
+        dto.setCctvtype(nvl(c.getCctvtype()));
+        dto.setCctvurl(nvl(c.getCctvurl()));
+        dto.setCctvresolution(nvl(c.getCctvresolution()));
+        dto.setCoordx(formatCoord(c.getCoordx()));   // Double → 문자열(소수 6자리)
+        dto.setCoordy(formatCoord(c.getCoordy()));
+        dto.setCctvformat(nvl(c.getCctvformat()));
+        dto.setCctvname(nvl(c.getCctvname()));
+        return dto;
+    }
+
+    //null -> "" 변환
+    private String nvl(String s) {
+        return (s == null || s.isBlank()) ? "" : s;
+    }
+
+    //BigDecimal -> String 변환
+    private String formatCoord(BigDecimal v) {
+         return (v == null) ? "" : v.setScale(6, RoundingMode.HALF_UP).toPlainString();
+    }
+
+
+
+
 }

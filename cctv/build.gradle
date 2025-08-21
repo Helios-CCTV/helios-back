@@ -61,6 +61,9 @@ dependencies {
     //GeoJsonWriter
     // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
     implementation 'org.locationtech.jts.io:jts-io-common:1.18.2' // Use the latest stable version
+
+    //JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 
 tasks.named('test') {
