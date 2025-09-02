@@ -48,7 +48,6 @@ public class CctvService {
     private String apiKey;
 
     //cctv 조회 -> controller 사용 X
-
     public ApiResponse<?> getCctv(GetCctvRequest request) {
         try {
             if (true){//(request.getLevel() <= 7) { //Detail 축소/확대값이 7보다 작거나 같을때
@@ -90,7 +89,6 @@ public class CctvService {
         }
     }
 
-
     //cctv 조회 api
     public List<CctvApiDTO> getCctvApi(GetCctvRequest getCctvRequest) {
         //type 1 : 실시간 스트리밍
@@ -107,7 +105,7 @@ public class CctvService {
             String maxY = Float.toString(getCctvRequest.getMaxY());
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("ex", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("its", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));

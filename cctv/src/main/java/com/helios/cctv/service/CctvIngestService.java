@@ -6,6 +6,7 @@ import com.helios.cctv.entity.cctv.Cctv;
 import com.helios.cctv.repository.CctvRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CctvIngestService {
     private final CctvRepository cctvRepository;
     private final EntityManager em;
@@ -23,9 +25,26 @@ public class CctvIngestService {
 
     // 전체를 호출하는 엔트리포인트 (사용자는 이 메서드만 호출)
     public void ingest(GetCctvRequest req) {
+        log.info("CCTV 데이터 수집 시작 - 요청: {}", req);
+        
         List<CctvApiDTO> dtos = apiService.getCctvApi(req);
-        if (dtos == null || dtos.isEmpty()) return;
+        if (dtos == null || dtos.isEmpty()) {
+            log.warn("조회된 CCTV 데이터가 없습니다.");
+            return;
+        }
+        
+        log.info("CCTV 데이터 조회 완료 - 총 {}개", dtos.size());
+        
+        // ✅ 추가: 유효한 URL을 가진 CCTV 개수 확인
+        long validUrlCount = dtos.stream()
+                .filter(d -> d.getCctvurl() != null && !d.getCctvurl().isBlank())
+                .count();
+        
+        log.info("유효한 CCTV URL 개수: {} / {}", validUrlCount, dtos.size());
+        
         saveAllInBatches(dtos, 500); // 4천+건이면 500씩 자동 루프
+        
+        log.info("CCTV 데이터 저장 완료");
     }
 
     // 배치마다 별도 트랜잭션(부분성공/복구 용이)

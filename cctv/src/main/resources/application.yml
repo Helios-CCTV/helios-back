@@ -35,7 +35,7 @@ logging:
 
 cctv:
   capture:
-    output-dir: "C:\\helios-CCTV\\capture"
+    output-dir: "C:\\helios-CCTV\\capture\\2"
     width: 1920
     height: 1080
     seconds-to-capture: 20   # 총 20초 읽기
