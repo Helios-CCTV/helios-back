@@ -17,7 +17,7 @@ spring:
       hibernate.order_inserts: true
       hibernate.order_updates: true
 
-  date:
+  data:
     redis:
       host: ${REDIS_URL}
       port: ${REDIS_PORT}
