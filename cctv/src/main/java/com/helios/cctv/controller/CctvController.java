@@ -37,4 +37,6 @@ public class CctvController {
             return ResponseEntity.badRequest().body(apiResponse);
         }
     }
+
+
 }
