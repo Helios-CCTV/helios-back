@@ -25,7 +25,17 @@ spring:
 
   redis:
     redisson:
-      file: classpath:redisson.yml
+      config: |
+        singleServerConfig:
+          address: "redis://${spring.data.redis.host}:${spring.data.redis.port}"
+          password: "${spring.data.redis.password}"
+          connectTimeout: 3000
+          timeout: 5000
+          retryAttempts: 1
+          retryInterval: 1000
+          pingConnectionInterval: 30000
+          keepAlive: true
+          tcpNoDelay: true
 
 
 
