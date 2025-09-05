@@ -67,7 +67,10 @@ dependencies {
 
     //redis
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
+
+    //redisson
     implementation "org.redisson:redisson-spring-boot-starter:3.37.0"
+
 
     //google guava
     // https://mvnrepository.com/artifact/com.google.guava/guava

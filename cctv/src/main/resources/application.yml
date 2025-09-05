@@ -23,6 +23,10 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  redis:
+    redisson:
+      file: classpath:redisson.yml
+
 
 
 mybatis:
