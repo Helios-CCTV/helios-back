@@ -33,5 +33,12 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
                                           @Param("minY") Double minY,
                                           @Param("maxY") Double maxY,
                                           @Param("roadType") String roadType);
+
+    @Query("""
+       select c from Cctv c
+       where c.cctvname = :cctvname and c.coordx = :coordx
+       """)
+    List<Cctv> findByCctvnameAndCoordx(@Param("cctvname") String cctvname,
+                                       @Param("coordx") java.math.BigDecimal coordx);
 }
 

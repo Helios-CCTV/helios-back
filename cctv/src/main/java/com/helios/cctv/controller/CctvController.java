@@ -20,7 +20,7 @@ public class CctvController {
 
     @GetMapping("/view")
     public ResponseEntity<ApiResponse<?>> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
-        ApiResponse<?> apiResponse = cctvService.findInBoundsAsDto(getCctvRequest);
+        ApiResponse<?> apiResponse = cctvService.getCctv(getCctvRequest);
         if (apiResponse.isSuccess()) {
             return ResponseEntity.ok(apiResponse);
         } else {
