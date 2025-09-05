@@ -47,6 +47,87 @@ public class CctvIngestService {
         log.info("CCTV 데이터 저장 완료");
     }
 
+    // ✅ 새로 추가: URL만 업데이트하는 로직
+    public void updateCctvUrls(GetCctvRequest req) {
+        log.info("CCTV URL 업데이트 시작 - 요청: {}", req);
+        
+        List<CctvApiDTO> dtos = apiService.getCctvApi(req);
+        if (dtos == null || dtos.isEmpty()) {
+            log.warn("조회된 CCTV 데이터가 없습니다.");
+            return;
+        }
+        
+        log.info("CCTV 데이터 조회 완료 - 총 {}개", dtos.size());
+        
+        updateUrlsInBatches(dtos, 500);
+        
+        log.info("CCTV URL 업데이트 완료");
+    }
+
+    // ✅ 새로 추가: URL 업데이트를 배치로 처리
+    public void updateUrlsInBatches(List<CctvApiDTO> dtos, int batchSize) {
+        int totalUpdated = 0;
+        int totalNotFound = 0;
+        
+        for (int i = 0; i < dtos.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, dtos.size());
+            List<CctvApiDTO> batch = dtos.subList(i, end);
+            
+            var result = updateUrlBatch(batch);
+            totalUpdated += result[0];
+            totalNotFound += result[1];
+            
+            log.info("배치 처리 완료 [{}/{}] - 업데이트: {}, 미발견: {}", 
+                    end, dtos.size(), result[0], result[1]);
+        }
+        
+        log.info("URL 업데이트 총 결과 - 업데이트: {}, 미발견: {}", totalUpdated, totalNotFound);
+    }
+
+    // ✅ 새로 추가: 배치 단위로 URL 업데이트 (별도 트랜잭션)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public int[] updateUrlBatch(List<CctvApiDTO> batch) {
+        int updated = 0;
+        int notFound = 0;
+        
+        for (CctvApiDTO dto : batch) {
+            // 필수 데이터 검증
+            if (dto.getCctvname() == null || dto.getCctvname().isBlank()) {
+                continue;
+            }
+            if (dto.getCctvurl() == null || dto.getCctvurl().isBlank()) {
+                continue;
+            }
+            
+            BigDecimal coordx = parseDecimal(dto.getCoordx());
+            if (coordx == null) {
+                continue;
+            }
+            
+            // 기존 CCTV 조회 (cctvname + coordx 조합으로)
+            List<Cctv> existingList = cctvRepository.findByCctvnameAndCoordx(dto.getCctvname(), coordx);
+            
+            if (existingList.isEmpty()) {
+                notFound++;
+                log.debug("기존 CCTV 미발견 - name: {}, coordx: {}", dto.getCctvname(), coordx);
+            } else {
+                // 여러 개 발견된 경우에도 모두 업데이트
+                for (Cctv existing : existingList) {
+                    existing.setCctvurl(dto.getCctvurl());
+                    cctvRepository.save(existing);
+                    updated++;
+                    log.debug("CCTV URL 업데이트 완료 - id: {}, name: {}, coordx: {}", 
+                            existing.getId(), dto.getCctvname(), coordx);
+                }
+            }
+        }
+        
+        cctvRepository.flush();
+        em.clear();
+        
+        return new int[]{updated, notFound};
+    }
+
     // 배치마다 별도 트랜잭션(부분성공/복구 용이)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveSlice(List<Cctv> slice) {
@@ -95,4 +176,5 @@ public class CctvIngestService {
             return null;
         }
     }
+
 }

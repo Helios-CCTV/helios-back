@@ -21,4 +21,10 @@ public class CctvIngestController {
         cctvIngestService.ingest(getCctvRequest);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/updateHLS")
+    public ResponseEntity<Void> updateHLS(@ModelAttribute GetCctvRequest getCctvRequest) {
+        cctvIngestService.updateCctvUrls(getCctvRequest);
+        return ResponseEntity.ok().build();
+    }
 }
