@@ -2,13 +2,16 @@ package com.helios.cctv.entity.cctv;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cctvs")
-@Data
+@Getter
+@Setter
 public class Cctv {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
