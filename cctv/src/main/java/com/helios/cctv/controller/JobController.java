@@ -21,7 +21,7 @@ public class JobController {
         return Map.of("jobId", jobId);
     }
 
-    @GetMapping("/{jobId}")
+    @GetMapping("/status/{jobId}")
     public JobResponse status(@PathVariable String jobId) {
         return service.getStatus(jobId);
     }
