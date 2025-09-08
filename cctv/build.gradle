@@ -77,7 +77,10 @@ dependencies {
     implementation("com.google.guava:guava:19.0")
 
     //fasterxml
-    //implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
+    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 }
 
 tasks.named('test') {
