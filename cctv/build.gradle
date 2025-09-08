@@ -70,7 +70,8 @@ dependencies {
 
     //redisson
     implementation "org.redisson:redisson-spring-boot-starter:3.37.0"
-    //implementation "org.redisson:redisson-spring-data-35:3.37.0"
+    // https://mvnrepository.com/artifact/org.redisson/redisson-spring-data-27
+    implementation("org.redisson:redisson-spring-data-27:3.51.0")
 
 
     //google guava
