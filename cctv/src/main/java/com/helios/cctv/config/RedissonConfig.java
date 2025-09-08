@@ -17,9 +17,9 @@ public class RedissonConfig {
         var cfg = new org.redisson.config.Config();
         var s = cfg.useSingleServer()
                 .setAddress("redis://" + host + ":" + port)
-                .setConnectTimeout(3000)
-                .setTimeout(5000)
-                .setRetryAttempts(1)
+                .setConnectTimeout(8000)
+                .setTimeout(20000)
+                .setRetryAttempts(3)
                 .setRetryInterval(1000)
                 .setPingConnectionInterval(30000)
                 .setKeepAlive(true)
