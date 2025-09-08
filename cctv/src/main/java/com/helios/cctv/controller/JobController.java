@@ -21,6 +21,12 @@ public class JobController {
         return Map.of("jobId", jobId);
     }
 
+    @PostMapping("/preprocess/all")
+    public Map<String, Object> enqueueAll() {
+        int n = service.allEnqueuePreprocess();
+        return Map.of("queued", n);
+    }
+
     @GetMapping("/status/{jobId}")
     public JobResponse status(@PathVariable String jobId) {
         return service.getStatus(jobId);

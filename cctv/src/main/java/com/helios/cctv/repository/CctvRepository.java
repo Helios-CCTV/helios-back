@@ -1,10 +1,12 @@
 package com.helios.cctv.repository;
 
+import com.helios.cctv.dto.cctv.CctvMini;
 import com.helios.cctv.entity.cctv.Cctv;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface CctvRepository extends JpaRepository<Cctv, Long> {
@@ -40,5 +42,13 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
        """)
     List<Cctv> findByCctvnameAndCoordx(@Param("cctvname") String cctvname,
                                        @Param("coordx") java.math.BigDecimal coordx);
+
+    @Query("""
+       select c.id as id, c.cctvurl as cctvurl
+       from Cctv c
+       where c.roadType = :roadType
+       order by c.id
+    """)
+    Page<CctvMini> findByRoadTypeMini(@Param("roadType") String roadType, Pageable pageable);
 }
 
