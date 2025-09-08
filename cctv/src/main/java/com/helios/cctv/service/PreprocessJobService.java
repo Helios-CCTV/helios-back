@@ -119,14 +119,15 @@ public class PreprocessJobService {
 
                         ops.opsForZSet().add("z:job:updated", jobId, now);
 
-                        MapRecord<String,String,String> rec = StreamRecords
-                                .newRecord().in(STREAM)
+                        MapRecord<String, String, String> rec = StreamRecords
+                                .newRecord()
+                                .in(STREAM)
                                 .ofStrings(Map.of(
-                                        "jobId",jobId,
-                                        "cctvId",row.getId().toString(),
-                                        "hls",row.getCctvurl(),
-                                        "sec","0",
-                                        "createdAt",String.valueOf(now)
+                                        "jobId", jobId,
+                                        "cctvId", String.valueOf(row.getId()),
+                                        "hls", row.getCctvurl(),
+                                        "sec", "0",
+                                        "createdAt", String.valueOf(now)
                                 ));
                         ops.opsForStream().add(rec);
                     }
