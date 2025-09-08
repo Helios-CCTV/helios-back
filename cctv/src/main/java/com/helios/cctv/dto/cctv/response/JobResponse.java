@@ -1,7 +1,6 @@
 package com.helios.cctv.dto.cctv.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

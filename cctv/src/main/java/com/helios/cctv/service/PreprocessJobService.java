@@ -71,7 +71,7 @@ public class PreprocessJobService {
     public JobResponse getStatus(String jobId) {
         String key = "job:" + jobId;
         Map<Object, Object> m = redis.opsForHash().entries(key);
-        if (m == null || m.isEmpty()) throw new NoSuchElementException("job not found");
+        if (m.isEmpty()) throw new NoSuchElementException("job not found");
 
         return new JobResponse(
                 jobId,
