@@ -92,7 +92,9 @@ public class PreprocessJobService {
     //일괄 전처리
     public int allEnqueuePreprocess() {
         final String roadType = "EX";
-        final int pageSize = 500;
+        final int pageSize   = 500;
+        final int batchJobs  = 100; // 50~200 사이에서 조절
+
         Pageable page = PageRequest.of(0, pageSize, Sort.by("id").ascending());
         int total = 0;
 
@@ -100,41 +102,56 @@ public class PreprocessJobService {
             Slice<CctvMini> slice = cctvRepository.findByRoadTypeMini(roadType, page);
             if (slice.isEmpty()) break;
 
-            long now = System.currentTimeMillis();
+            var items = slice.getContent();
 
-            SessionCallback<Object> cb = new SessionCallback<>() {
-                @Override @SuppressWarnings("unchecked")
-                public Object execute(RedisOperations operations) {
-                    RedisOperations<String,String> ops = (RedisOperations<String,String>) operations;
+            for (int i = 0; i < items.size(); i += batchJobs) {
+                final var part = items.subList(i, Math.min(i + batchJobs, items.size()));
+                final long now = System.currentTimeMillis();
 
-                    for (CctvMini row : slice.getContent()) {
-                        String jobId = UUID.randomUUID().toString();
-                        String jobKey = "job:" + jobId;
+                // ★ 람다 대신 명시적 SessionCallback<Void>
+                SessionCallback<Void> pipe = new SessionCallback<Void>() {
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public Void execute(RedisOperations operations) {
+                        RedisOperations<String, String> ops =
+                                (RedisOperations<String, String>) operations;
 
-                        ops.opsForHash().putAll(jobKey, Map.of(
-                                "state","QUEUED","progress","0","message","queued","createdAt",String.valueOf(now)
-                        ));
-                        ops.expire(jobKey, Duration.ofDays(7)); // 선택
+                        for (CctvMini row : part) {
+                            String jobId  = java.util.UUID.randomUUID().toString();
+                            String jobKey = "job:" + jobId;
 
-                        ops.opsForZSet().add("z:job:updated", jobId, now);
+                            // 1) 상태 Hash
+                            ops.opsForHash().putAll(jobKey, Map.of(
+                                    "state","QUEUED",
+                                    "progress","0",
+                                    "message","queued",
+                                    "createdAt", String.valueOf(now)
+                            ));
+                            ops.expire(jobKey, java.time.Duration.ofDays(7)); // 옵션
 
-                        MapRecord<String, String, String> rec = StreamRecords
-                                .newRecord()
-                                .in(STREAM)
-                                .ofStrings(Map.of(
-                                        "jobId", jobId,
-                                        "cctvId", String.valueOf(row.getId()),
-                                        "hls", row.getCctvurl(),
-                                        "sec", "0",
-                                        "createdAt", String.valueOf(now)
-                                ));
-                        ops.opsForStream().add(rec);
+                            // 2) 최신 인덱스 ZSET
+                            ops.opsForZSet().add("z:job:updated", jobId, now);
+
+                            // 3) 작업 Stream (모두 String)
+                            org.springframework.data.redis.connection.stream.MapRecord<String, String, String> rec =
+                                    org.springframework.data.redis.connection.stream.StreamRecords
+                                            .newRecord()
+                                            .in("s:preprocess")
+                                            .ofStrings(Map.of(
+                                                    "jobId", jobId,
+                                                    "cctvId", String.valueOf(row.getId()),
+                                                    "hls", row.getCctvurl(),
+                                                    "sec", "0",
+                                                    "createdAt", String.valueOf(now)
+                                            ));
+                            ops.opsForStream().add(rec);
+                        }
+                        return null;
                     }
-                    return null;
-                }
-            };
+                };
 
-            redis.executePipelined(cb);
+                redis.executePipelined(pipe);   // ← 경고 없이 깔끔
+            }
 
             total += slice.getNumberOfElements();
             if (!slice.hasNext()) break;
