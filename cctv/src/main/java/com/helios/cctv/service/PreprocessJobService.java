@@ -93,7 +93,7 @@ public class PreprocessJobService {
     public int allEnqueuePreprocess() {
         final String roadType = "EX";
         final int pageSize   = 500;
-        final int batchJobs  = 50; // 50~200
+        final int batchJobs  = 30; // 50~200
 
         Pageable page = PageRequest.of(0, pageSize, Sort.by("id").ascending());
         int total = 0;
