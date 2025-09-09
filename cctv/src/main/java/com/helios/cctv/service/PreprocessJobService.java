@@ -119,8 +119,8 @@ public class PreprocessJobService {
                                 .ofStrings(Map.of(
                                         "cctvId",   String.valueOf(row.getId()),
                                         "hls",      row.getCctvurl(),
-                                        "sec",      "0",
-                                        "attempt",  "0",
+                                        "sec",      "15",
+                                        "attempt",  "1",
                                         "enqueuedAt", String.valueOf(now)
                                 ));
 
