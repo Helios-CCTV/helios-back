@@ -12,15 +12,14 @@ import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.redis.core.SessionCallback;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +27,9 @@ public class PreprocessJobService {
     private final CctvRepository cctvRepository;
     private final StringRedisTemplate redis;
 
-    private static final String STREAM = "s:preprocess";
+    private static final String STREAM = "stream:preprocess";
     private static final String GROUP  = "workers";
+    private final ThreadPoolTaskExecutor enqueueExecutor;
 
     @PostConstruct
     void initGroup() {
@@ -92,35 +92,47 @@ public class PreprocessJobService {
     //일괄 전처리
     public int allEnqueuePreprocess() {
         final String roadType = "EX";
-        final int pageSize  = 200;  // 더 작게
-        final int step      = 20;   // 한 번에 20개씩
-        final long pauseMs  = 10;   // 묶음 사이 10ms 쉬기
+        final int pageSize = 200;    // DB 페이징
+        final int step     = 20;     // 한 배치에 넣을 작업 수 (10~50 권장)
 
         Pageable page = PageRequest.of(0, pageSize, Sort.by("id").ascending());
+        int total = 0;
 
         for (;;) {
-            var slice = cctvRepository.findByRoadTypeMini("EX", page);
+            Slice<CctvMini> slice = cctvRepository.findByRoadTypeMini(roadType, page);
             if (slice.isEmpty()) break;
 
-            var items = slice.getContent();
-            long now = System.currentTimeMillis();
+            var list = slice.getContent();
+            total += list.size();
 
-            for (int i = 0; i < items.size(); i += step) {
-                var part = items.subList(i, Math.min(i + step, items.size()));
-                for (var row : part) {
-                    var rec = StreamRecords.newRecord()
-                            .in(STREAM)
-                            .ofStrings(Map.of(
-                                    "cctvId", String.valueOf(row.getId()),
-                                    "hls", row.getCctvurl(),
-                                    "sec", "0",
-                                    "attempt", "0",
-                                    "enqueuedAt", String.valueOf(now)
-                            ));
-                    redis.opsForStream().add(rec); // 단건 XADD
-                }
-                try { Thread.sleep(pauseMs); } catch (InterruptedException ignored) {}
+            // step 크기로 쪼개서 각각을 executor로 보냄(동시 실행)
+            List<CompletableFuture<Void>> futures = new java.util.ArrayList<>();
+            final long now = System.currentTimeMillis();
+
+            for (int i = 0; i < list.size(); i += step) {
+                var part = list.subList(i, Math.min(i + step, list.size()));
+                futures.add(CompletableFuture.runAsync(() -> {
+                    // 단건 XADD 반복(파이프라인 X) — 네트워크 여건에선 이게 더 안전
+                    for (CctvMini row : part) {
+                        var rec = StreamRecords.newRecord()
+                                .in(STREAM)
+                                .ofStrings(Map.of(
+                                        "cctvId",   String.valueOf(row.getId()),
+                                        "hls",      row.getCctvurl(),
+                                        "sec",      "0",
+                                        "attempt",  "0",
+                                        "enqueuedAt", String.valueOf(now)
+                                ));
+
+                        // 필요하면 MAXLEN≈으로 무한증가 방지 (Spring Data 3.5)
+                        // redis.opsForStream().add(rec, XAddOptions.maxlen(10000).approximateTrimming(true));
+                        redis.opsForStream().add(rec); // 기본
+                    }
+                }, enqueueExecutor));
             }
+
+            // 현재 페이지의 모든 배치가 끝날 때까지 대기(다음 페이지로 넘어가기 전에만 기다림)
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
             if (!slice.hasNext()) break;
             page = slice.nextPageable();
