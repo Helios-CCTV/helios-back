@@ -17,16 +17,13 @@ public class RedissonConfig {
         var cfg = new org.redisson.config.Config();
         var s = cfg.useSingleServer()
                 .setAddress("redis://" + host + ":" + port)
-                .setPassword(password == null || password.isBlank() ? null : password)
-                // 연결/명령 대기 시간
-                .setConnectTimeout(15000)     // 8s → 15s
-                .setTimeout(60000)            // 20s → 60s
-                .setRetryAttempts(5)          // 3 → 5
-                .setRetryInterval(2000)       // 1s → 2s
-                // 커넥션 풀(기본값이 작으면 대기 발생)
+                .setDatabase(0)                 // 꼭 명시: RedisInsight와 같은 DB 보기
+                .setConnectTimeout(15000)
+                .setTimeout(60000)
+                .setRetryAttempts(5)
+                .setRetryInterval(2000)
                 .setConnectionPoolSize(64)
                 .setConnectionMinimumIdleSize(16)
-                // 헬스체크
                 .setPingConnectionInterval(30000)
                 .setKeepAlive(true)
                 .setTcpNoDelay(true);

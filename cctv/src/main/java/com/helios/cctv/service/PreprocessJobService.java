@@ -92,71 +92,40 @@ public class PreprocessJobService {
     //일괄 전처리
     public int allEnqueuePreprocess() {
         final String roadType = "EX";
-        final int pageSize   = 500;
-        final int batchJobs  = 30; // 50~200
+        final int pageSize  = 200;  // 더 작게
+        final int step      = 20;   // 한 번에 20개씩
+        final long pauseMs  = 10;   // 묶음 사이 10ms 쉬기
 
         Pageable page = PageRequest.of(0, pageSize, Sort.by("id").ascending());
-        int total = 0;
 
         for (;;) {
-            Slice<CctvMini> slice = cctvRepository.findByRoadTypeMini(roadType, page);
+            var slice = cctvRepository.findByRoadTypeMini("EX", page);
             if (slice.isEmpty()) break;
 
             var items = slice.getContent();
+            long now = System.currentTimeMillis();
 
-            for (int i = 0; i < items.size(); i += batchJobs) {
-                final var part = items.subList(i, Math.min(i + batchJobs, items.size()));
-                final long now = System.currentTimeMillis();
-
-                // ★ 람다 대신 명시적 SessionCallback<Void>
-                SessionCallback<Void> pipe = new SessionCallback<Void>() {
-                    @Override
-                    @SuppressWarnings("unchecked")
-                    public Void execute(RedisOperations operations) {
-                        RedisOperations<String, String> ops =
-                                (RedisOperations<String, String>) operations;
-
-                        for (CctvMini row : part) {
-                            String jobId  = java.util.UUID.randomUUID().toString();
-                            String jobKey = "job:" + jobId;
-
-                            // 1) 상태 Hash
-                            ops.opsForHash().putAll(jobKey, Map.of(
-                                    "state","QUEUED",
-                                    "progress","0",
-                                    "message","queued",
-                                    "createdAt", String.valueOf(now)
+            for (int i = 0; i < items.size(); i += step) {
+                var part = items.subList(i, Math.min(i + step, items.size()));
+                for (var row : part) {
+                    var rec = StreamRecords.newRecord()
+                            .in(STREAM)
+                            .ofStrings(Map.of(
+                                    "cctvId", String.valueOf(row.getId()),
+                                    "hls", row.getCctvurl(),
+                                    "sec", "0",
+                                    "attempt", "0",
+                                    "enqueuedAt", String.valueOf(now)
                             ));
-                            ops.expire(jobKey, java.time.Duration.ofDays(7)); // 옵션
-
-                            // 2) 최신 인덱스 ZSET
-                            ops.opsForZSet().add("z:job:updated", jobId, now);
-
-                            // 3) 작업 Stream (모두 String)
-                            org.springframework.data.redis.connection.stream.MapRecord<String, String, String> rec =
-                                    org.springframework.data.redis.connection.stream.StreamRecords
-                                            .newRecord()
-                                            .in("s:preprocess")
-                                            .ofStrings(Map.of(
-                                                    "jobId", jobId,
-                                                    "cctvId", String.valueOf(row.getId()),
-                                                    "hls", row.getCctvurl(),
-                                                    "sec", "0",
-                                                    "createdAt", String.valueOf(now)
-                                            ));
-                            ops.opsForStream().add(rec);
-                        }
-                        return null;
-                    }
-                };
-
-                redis.executePipelined(pipe);   // ← 경고 없이 깔끔
+                    redis.opsForStream().add(rec); // 단건 XADD
+                }
+                try { Thread.sleep(pauseMs); } catch (InterruptedException ignored) {}
             }
 
-            total += slice.getNumberOfElements();
             if (!slice.hasNext()) break;
             page = slice.nextPageable();
         }
+
         return total;
     }
 
