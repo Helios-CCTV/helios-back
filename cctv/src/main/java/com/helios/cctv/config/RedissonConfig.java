@@ -17,10 +17,13 @@ public class RedissonConfig {
         var cfg = new org.redisson.config.Config();
         var s = cfg.useSingleServer()
                 .setAddress("redis://" + host + ":" + port)
-                .setConnectTimeout(3000)
-                .setTimeout(5000)
-                .setRetryAttempts(1)
-                .setRetryInterval(1000)
+                .setDatabase(0)                 // 꼭 명시: RedisInsight와 같은 DB 보기
+                .setConnectTimeout(15000)
+                .setTimeout(60000)
+                .setRetryAttempts(5)
+                .setRetryInterval(2000)
+                .setConnectionPoolSize(64)
+                .setConnectionMinimumIdleSize(16)
                 .setPingConnectionInterval(30000)
                 .setKeepAlive(true)
                 .setTcpNoDelay(true);

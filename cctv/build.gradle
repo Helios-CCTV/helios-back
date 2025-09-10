@@ -69,7 +69,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
 
     //redisson
-    implementation "org.redisson:redisson-spring-boot-starter:3.37.0"
+    implementation("org.redisson:redisson-spring-boot-starter:3.50.0")
+    // https://mvnrepository.com/artifact/org.redisson/redisson-spring-data-27
+    implementation("org.redisson:redisson-spring-data-35:3.50.0")
 
 
     //google guava
@@ -77,7 +79,10 @@ dependencies {
     implementation("com.google.guava:guava:19.0")
 
     //fasterxml
-    //implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
+    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 }
 
 tasks.named('test') {
