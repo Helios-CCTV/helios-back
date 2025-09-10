@@ -44,7 +44,7 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
                                        @Param("coordx") java.math.BigDecimal coordx);
 
     @Query("""
-       select c.id as id, c.cctvurl as cctvurl
+       select c.id as id, c.cctvurl_pre as cctvurl
        from Cctv c
        where c.roadType = :roadType
        order by c.id

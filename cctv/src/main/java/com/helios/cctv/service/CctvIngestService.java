@@ -52,7 +52,6 @@ public class CctvIngestService {
     public void updateCctvUrls(GetCctvRequest req, boolean isHttps) {
         log.info("CCTV URL 업데이트 시작 - 요청: {}", req);
 
-        
         List<CctvApiDTO> dtos = apiService.getCctvApi(req);
         if (dtos == null || dtos.isEmpty()) {
             log.warn("조회된 CCTV 데이터가 없습니다.");
