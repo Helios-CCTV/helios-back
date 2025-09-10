@@ -22,6 +22,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.WKTWriter;
 import org.locationtech.proj4j.ProjCoordinate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.orm.hibernate5.support.OpenSessionInterceptor;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -33,6 +34,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -103,10 +105,16 @@ public class CctvService {
             String maxX = Float.toString(getCctvRequest.getMaxX());
             String minY = Float.toString(getCctvRequest.getMinY());
             String maxY = Float.toString(getCctvRequest.getMaxY());
+            String cctvType = Optional.ofNullable(getCctvRequest.getCctvType())
+                    .filter(s -> !s.isBlank())
+                    .orElse("4");
+            String roadType = Optional.ofNullable((getCctvRequest.getRoadType()))
+                    .filter(s -> !s.isBlank())
+                    .orElse("ex");
             StringBuilder urlBuilder = new StringBuilder("https://openapi.its.go.kr:9443/cctvInfo");
             urlBuilder.append("?" + URLEncoder.encode("apiKey", "UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("ex", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode("4", "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode(roadType, "UTF-8"));
+            urlBuilder.append("&" + URLEncoder.encode("cctvType", "UTF-8") + "=" + URLEncoder.encode(cctvType, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minX", "UTF-8") + "=" + URLEncoder.encode(minX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("maxX", "UTF-8") + "=" + URLEncoder.encode(maxX, "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("minY", "UTF-8") + "=" + URLEncoder.encode(minY, "UTF-8"));

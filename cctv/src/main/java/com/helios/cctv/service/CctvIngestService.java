@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -47,9 +48,10 @@ public class CctvIngestService {
         log.info("CCTV 데이터 저장 완료");
     }
 
-    // ✅ 새로 추가: URL만 업데이트하는 로직
-    public void updateCctvUrls(GetCctvRequest req) {
+    // URL만 업데이트하는 로직 type 1 : https, type 2 : http
+    public void updateCctvUrls(GetCctvRequest req, boolean isHttps) {
         log.info("CCTV URL 업데이트 시작 - 요청: {}", req);
+
         
         List<CctvApiDTO> dtos = apiService.getCctvApi(req);
         if (dtos == null || dtos.isEmpty()) {
@@ -59,13 +61,13 @@ public class CctvIngestService {
         
         log.info("CCTV 데이터 조회 완료 - 총 {}개", dtos.size());
         
-        updateUrlsInBatches(dtos, 500);
+        updateUrlsInBatches(dtos, 500, isHttps);
         
         log.info("CCTV URL 업데이트 완료");
     }
 
-    // ✅ 새로 추가: URL 업데이트를 배치로 처리
-    public void updateUrlsInBatches(List<CctvApiDTO> dtos, int batchSize) {
+    // 새로 추가: URL 업데이트를 배치로 처리
+    public void updateUrlsInBatches(List<CctvApiDTO> dtos, int batchSize, boolean isHttps) {
         int totalUpdated = 0;
         int totalNotFound = 0;
         
@@ -73,7 +75,7 @@ public class CctvIngestService {
             int end = Math.min(i + batchSize, dtos.size());
             List<CctvApiDTO> batch = dtos.subList(i, end);
             
-            var result = updateUrlBatch(batch);
+            var result = updateUrlBatch(batch, isHttps);
             totalUpdated += result[0];
             totalNotFound += result[1];
             
@@ -84,47 +86,70 @@ public class CctvIngestService {
         log.info("URL 업데이트 총 결과 - 업데이트: {}, 미발견: {}", totalUpdated, totalNotFound);
     }
 
-    // ✅ 새로 추가: 배치 단위로 URL 업데이트 (별도 트랜잭션)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int[] updateUrlBatch(List<CctvApiDTO> batch) {
+    public int[] updateUrlBatch(List<CctvApiDTO> batch, boolean isHttps) {
         int updated = 0;
         int notFound = 0;
-        
+
+        // 배치로 모아서 한 번에 저장
+        List<Cctv> toSave = new ArrayList<>();
+
         for (CctvApiDTO dto : batch) {
-            // 필수 데이터 검증
-            if (dto.getCctvname() == null || dto.getCctvname().isBlank()) {
-                continue;
-            }
-            if (dto.getCctvurl() == null || dto.getCctvurl().isBlank()) {
-                continue;
-            }
-            
-            BigDecimal coordx = parseDecimal(dto.getCoordx());
-            if (coordx == null) {
-                continue;
-            }
-            
-            // 기존 CCTV 조회 (cctvname + coordx 조합으로)
-            List<Cctv> existingList = cctvRepository.findByCctvnameAndCoordx(dto.getCctvname(), coordx);
-            
+            // 1) 필수 데이터 검증
+            String name = dto.getCctvname();
+            if (name == null || name.isBlank()) continue;
+
+            String newUrl = trimToNull(dto.getCctvurl()); // DTO는 항상 cctvurl만 의미있음
+            if (newUrl == null) continue;
+
+            // coordx 파싱 (DB 컬럼 scale=6에 맞춰 정규화 권장)
+            BigDecimal coordx = parseDecimal(dto.getCoordx()); // parseDecimal에서 scale 맞추면 더 안전
+            if (coordx == null) continue;
+
+            // 2) 기존 CCTV 조회 (name + coordx)
+            List<Cctv> existingList = cctvRepository.findByCctvnameAndCoordx(name, coordx);
+
             if (existingList.isEmpty()) {
                 notFound++;
-                log.debug("기존 CCTV 미발견 - name: {}, coordx: {}", dto.getCctvname(), coordx);
-            } else {
-                // 여러 개 발견된 경우에도 모두 업데이트
-                for (Cctv existing : existingList) {
-                    existing.setCctvurl(dto.getCctvurl());
-                    cctvRepository.save(existing);
-                    updated++;
-                    log.debug("CCTV URL 업데이트 완료 - id: {}, name: {}, coordx: {}", 
-                            existing.getId(), dto.getCctvname(), coordx);
+                log.debug("기존 CCTV 미발견 - name: {}, coordx: {}", name, coordx);
+                continue;
+            }
+
+            // 3) 여러 개 발견 시 모두 처리하되, 값이 바뀔 때만 저장/카운트
+            for (Cctv existing : existingList) {
+                if (isHttps) {
+                    String old = existing.getCctvurl();
+                    if (!newUrl.equals(old)) {
+                        existing.setCctvurl(newUrl);
+                        toSave.add(existing);
+                        updated++;
+                        log.debug("CCTV URL(HTTPS) 업데이트 - id: {}, name: {}, coordx: {}, {} -> {}",
+                                existing.getId(), name, coordx, safe(old), newUrl);
+                    } else {
+                        log.debug("변경 없음(HTTPS) - id: {}, name: {}, coordx: {}", existing.getId(), name, coordx);
+                    }
+                } else {
+                    String oldPre = existing.getCctvurl_pre();
+                    if (!newUrl.equals(oldPre)) {
+                        existing.setCctvurl_pre(newUrl);
+                        toSave.add(existing);
+                        updated++;
+                        log.debug("CCTV URL(HTTP-pre) 업데이트 - id: {}, name: {}, coordx: {}, {} -> {}",
+                                existing.getId(), name, coordx, safe(oldPre), newUrl);
+                    } else {
+                        log.debug("변경 없음(HTTP-pre) - id: {}, name: {}, coordx: {}", existing.getId(), name, coordx);
+                    }
                 }
             }
         }
-        
+
+        // 4) 배치 저장 (라운드트립 최소화)
+        if (!toSave.isEmpty()) {
+            cctvRepository.saveAll(toSave);
+        }
         cctvRepository.flush();
         em.clear();
-        
+
         return new int[]{updated, notFound};
     }
 
@@ -159,6 +184,7 @@ public class CctvIngestService {
         e.setCoordy(parseDecimal(d.getCoordy()));
         e.setCctvformat(nullIfBlank(d.getCctvformat()));
         e.setCctvname(nullIfBlank(d.getCctvname()));
+        e.setCctvurl_pre(nullIfBlank(d.getCctvurl_pre()));
         return e;
     }
 
@@ -175,6 +201,16 @@ public class CctvIngestService {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+    private static String safe(String s) {
+        return s == null ? "(null)" : s;
     }
 
 }

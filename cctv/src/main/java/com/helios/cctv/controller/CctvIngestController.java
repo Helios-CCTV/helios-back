@@ -1,9 +1,7 @@
 package com.helios.cctv.controller;
 
-import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import com.helios.cctv.service.CctvIngestService;
-import com.helios.cctv.service.CctvService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +22,13 @@ public class CctvIngestController {
 
     @GetMapping("/updateHLS")
     public ResponseEntity<Void> updateHLS(@ModelAttribute GetCctvRequest getCctvRequest) {
-        cctvIngestService.updateCctvUrls(getCctvRequest);
+        cctvIngestService.updateCctvUrls(getCctvRequest,true);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/updateHLS-pre")
+    public ResponseEntity<Void> updateHLSPreprocess(@ModelAttribute GetCctvRequest getCctvRequest) {
+        cctvIngestService.updateCctvUrls(getCctvRequest,false);
         return ResponseEntity.ok().build();
     }
 }
