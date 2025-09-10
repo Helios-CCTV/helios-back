@@ -6,6 +6,7 @@ import com.helios.cctv.entity.cctv.Cctv;
 import com.helios.cctv.repository.CctvRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -21,6 +22,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PreprocessJobService {
@@ -112,21 +114,37 @@ public class PreprocessJobService {
             for (int i = 0; i < list.size(); i += step) {
                 var part = list.subList(i, Math.min(i + step, list.size()));
                 futures.add(CompletableFuture.runAsync(() -> {
-                    // 단건 XADD 반복(파이프라인 X) — 네트워크 여건에선 이게 더 안전
                     for (CctvMini row : part) {
+                        // --- 가드: 필수값 확인 (null/빈값이면 작업 생성 스킵) ---
+                        Long id = row.getId();
+                        String idStr = (id == null) ? null : String.valueOf(id);
+                        String hls = trimToNull(row.getCctvurl()); // 비어있으면 null
+
+                        if (idStr == null || hls == null) {
+                            // 필요 시 스킵 로그
+                            log.debug("작업 스킵 - 필수값 누락(idStr:{}, hls:{}) id:{}",
+                                    idStr, hls, id);
+                            continue; // 작업 생성 안 함
+                        }
+
+                        // --- 여기부터는 모두 non-null -> Map.of 사용해도 안전 ---
                         var rec = StreamRecords.newRecord()
                                 .in(STREAM)
                                 .ofStrings(Map.of(
-                                        "cctvId",   String.valueOf(row.getId()),
-                                        "hls",      row.getCctvurl(),
-                                        "sec",      "15",
-                                        "attempt",  "1",
+                                        "cctvId",    idStr,
+                                        "hls",       hls,
+                                        "sec",       "15",
+                                        "attempt",   "1",
                                         "enqueuedAt", String.valueOf(now)
                                 ));
 
-                        // 필요하면 MAXLEN≈으로 무한증가 방지 (Spring Data 3.5)
-                        // redis.opsForStream().add(rec, XAddOptions.maxlen(10000).approximateTrimming(true));
-                        redis.opsForStream().add(rec); // 기본
+                        try {
+                            // 필요하면 MAXLEN 옵션 사용 가능
+                            redis.opsForStream().add(rec);
+                        } catch (Exception e) {
+                            // 한 건 실패해도 나머지 진행
+                            log.warn("작업 enqueue 실패 - cctvId:{}, cause: {}", idStr, e.toString(), e);
+                        }
                     }
                 }, enqueueExecutor));
             }
@@ -139,6 +157,12 @@ public class PreprocessJobService {
         }
 
         return total;
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
     }
 
 
