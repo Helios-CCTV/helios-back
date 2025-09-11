@@ -36,6 +36,9 @@ public class Cctv {
     private String roadType;
     private String cctvname;
 
+    @Column(columnDefinition = "TEXT")
+    private String cctvurl_pre;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 }

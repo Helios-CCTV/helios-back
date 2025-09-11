@@ -13,4 +13,5 @@ public class CctvApiDTO {
     private String coordy;           // 위도 좌표
     private String cctvformat;       // CCTV 형식
     private String cctvname;         // CCTV 설치 장소명
+    private String cctvurl_pre;
 }
