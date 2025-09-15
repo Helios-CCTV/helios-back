@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helios.cctv.mapper.DetectionMapper">
+
+    <!-- analyzes 한 건을 기준으로 결과를 병합하기 위해 analyzeId를 <id>로 지정 -->
+    <resultMap id="DetectionResultMap" type="com.helios.cctv.dto.analyze.detection.Detection">
+        <!-- 부모 키: 같은 analyze_id면 한 객체로 병합되고 아래 collection에 damage_type이 누적됨 -->
+        <id     property="analyzeId" column="analyze_id" />
+        <result property="id"        column="cctv_id" />
+        <result property="cctvName"  column="cctv_name" />
+        <result property="date"      column="analyzed_date_str" />
+
+        <!-- 자식 컬렉션: damage_type들을 List<String>으로 수집 -->
+        <collection property="detections" ofType="string">
+            <result column="damage_type"/>
+        </collection>
+    </resultMap>
+
+    <!-- 분석 단위로 조회: 각 analyze에 매핑된 cctv 정보와 damage_type 목록 -->
+    <select id="selectAll" resultMap="DetectionResultMap">
+        SELECT
+            a.id                                   AS analyze_id,
+            c.id                                   AS cctv_id,
+            c.cctvname                             AS cctv_name,
+            DATE_FORMAT(a.analyzed_date, '%Y-%m-%d') AS analyzed_date_str,
+            d.damage_type
+        FROM analyzes a
+                 JOIN cctvs c
+                      ON c.id = a.cctv_id
+                 LEFT JOIN detections d
+                           ON d.analyze_id = a.id
+        /* 정렬은 동일 analyze_id가 연속되도록 보장하는 것이 컬렉션 매핑에 유리 */
+        ORDER BY a.analyzed_date DESC, a.id ASC, d.id ASC
+    </select>
+
+</mapper>
