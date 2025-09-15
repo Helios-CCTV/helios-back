@@ -217,7 +217,7 @@ public class CctvService {
         }
     }
 
-    //cctv 조회
+    //cctv 조회 from DB
     public ApiResponse<List<CctvApiDTO>> findInBoundsAsDto(GetCctvRequest request) {
         try{
             double xMin = Math.min(request.getMinX(), request.getMaxX());
@@ -234,6 +234,12 @@ public class CctvService {
         } catch (Exception e) {
             return ApiResponse.fail("조회실패",500);
         }
+    }
+
+    //cctv검색
+    public ApiResponse<List<CctvApiDTO>> search(String search){
+        List<Cctv> list = cctvRepository.searchExByName(search);
+        return null;
     }
 
     //Entity -> DTO 변환
@@ -260,6 +266,8 @@ public class CctvService {
     private String formatCoord(BigDecimal v) {
          return (v == null) ? "" : v.setScale(6, RoundingMode.HALF_UP).toPlainString();
     }
+
+
 
 
 
