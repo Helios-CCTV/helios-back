@@ -24,8 +24,14 @@ public class AnalyzeController {
         return null;
     }
 
-    @GetMapping("/getDetection")
+    @GetMapping("/get-analyze")
     public ApiResponse<List<Detection>> getDetection(){
+        return analyzeService.getAnalyze();
+    }
+
+    @GetMapping("/get-detected")
+    public ApiResponse<List<Detection>> getDetected(){
         return analyzeService.getDetection();
     }
+
 }

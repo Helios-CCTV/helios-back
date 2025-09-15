@@ -20,6 +20,7 @@
     </resultMap>
 
     <!-- 분석 단위로 조회: 각 analyze에 매핑된 cctv 정보와 damage_type 목록 -->
+    <!--분석 조회-->
     <select id="selectAll" resultMap="DetectionResultMap">
         SELECT
             a.id                                   AS analyze_id,
@@ -33,6 +34,24 @@
                  LEFT JOIN detections d
                            ON d.analyze_id = a.id
         /* 정렬은 동일 analyze_id가 연속되도록 보장하는 것이 컬렉션 매핑에 유리 */
+        ORDER BY a.analyzed_date DESC, a.id ASC, d.id ASC
+    </select>
+
+    <!--파손 조회-->
+    <select id="selectDetection" resultMap="DetectionResultMap">
+        SELECT
+            a.id                                   AS analyze_id,
+            c.id                                   AS cctv_id,
+            c.cctvname                             AS cctv_name,
+            DATE_FORMAT(a.analyzed_date, '%Y-%m-%d') AS analyzed_date_str,
+            d.damage_type
+        FROM analyzes a
+                 JOIN cctvs c
+                      ON c.id = a.cctv_id
+                 LEFT JOIN detections d
+                           ON d.analyze_id = a.id
+        /* 정렬은 동일 analyze_id가 연속되도록 보장하는 것이 컬렉션 매핑에 유리 */
+        where a.detection_count > 0
         ORDER BY a.analyzed_date DESC, a.id ASC, d.id ASC
     </select>
 

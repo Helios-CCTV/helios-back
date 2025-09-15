@@ -8,4 +8,5 @@ import java.util.List;
 @Mapper
 public interface DetectionMapper {
     List<Detection> selectAll();
+    List<Detection> selectDetection();
 }
