@@ -3,6 +3,7 @@ package com.helios.cctv.controller;
 import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.CctvApiDTO;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
+import com.helios.cctv.entity.cctv.Cctv;
 import com.helios.cctv.service.CctvService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class CctvController {
 
     @GetMapping("/view")
     public ResponseEntity<ApiResponse<?>> getCctv(@ModelAttribute GetCctvRequest getCctvRequest) {
-        ApiResponse<?> apiResponse = cctvService.getCctv(getCctvRequest);
+        ApiResponse<?> apiResponse = cctvService.findInBoundsAsDto(getCctvRequest);
         if (apiResponse.isSuccess()) {
             return ResponseEntity.ok(apiResponse);
         } else {
@@ -35,6 +36,16 @@ public class CctvController {
             return ResponseEntity.ok(apiResponse);
         } else {
             return ResponseEntity.badRequest().body(apiResponse);
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<CctvApiDTO>>> search(String search){
+        ApiResponse<List<CctvApiDTO>> reponse = cctvService.search(search);
+        if (reponse.isSuccess()) {
+            return ResponseEntity.ok(reponse);
+        } else {
+            return ResponseEntity.badRequest().body(reponse);
         }
     }
 
