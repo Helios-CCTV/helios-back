@@ -236,6 +236,21 @@ public class CctvService {
         }
     }
 
+    //cctv검색
+    public ApiResponse<List<CctvApiDTO>> search(String search){
+        if (search == null || search.isBlank()) return null;
+        try{
+            List<Cctv> entities = cctvRepository.searchExByName(search);
+            List<CctvApiDTO> list = entities.stream()
+                    .map(this::toDto)
+                    .toList();
+            return ApiResponse.ok(list,200);
+        } catch (Exception e) {
+            return ApiResponse.fail("검색실패",500);
+        }
+        
+    }
+
     //Entity -> DTO 변환
     private CctvApiDTO toDto(Cctv c) {
         CctvApiDTO dto = new CctvApiDTO();

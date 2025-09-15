@@ -38,5 +38,15 @@ public class CctvController {
         }
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<CctvApiDTO>>> search(String search){
+        ApiResponse<List<CctvApiDTO>> reponse = cctvService.search(search);
+        if (reponse.isSuccess()) {
+            return ResponseEntity.ok(reponse);
+        } else {
+            return ResponseEntity.badRequest().body(reponse);
+        }
+    }
+
 
 }

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface CctvRepository extends JpaRepository<Cctv, Long> {
+
     @Query("""
            select c
              from Cctv c
@@ -22,6 +23,7 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
                                 @Param("maxX") Double maxX,
                                 @Param("minY") Double minY,
                                 @Param("maxY") Double maxY);
+
 
     @Query("""
        select c from Cctv c
@@ -50,5 +52,24 @@ public interface CctvRepository extends JpaRepository<Cctv, Long> {
        order by c.id
     """)
     Page<CctvMini> findByRoadTypeMini(@Param("roadType") String roadType, Pageable pageable);
+
+    @Query("""
+      select c
+      from Cctv c
+      where c.cctvname is not null
+        and c.roadType = 'EX'
+        and lower(c.cctvname) like concat('%', lower(:q), '%')
+      order by
+        case
+          when lower(c.cctvname) = lower(:q) then 0
+          when lower(c.cctvname) like concat(lower(:q), '%') then 1
+          else 2
+        end,
+        locate(lower(:q), lower(c.cctvname)),
+        abs(length(c.cctvname) - length(:q)),
+        c.cctvname asc
+    """)
+    List<Cctv> searchExByName(@Param("q") String q);
+
 }
 
