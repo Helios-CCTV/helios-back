@@ -18,13 +18,25 @@ public class AnalyzeService {
         return null;
     }
 
-    public ApiResponse<List<Detection>> getDetection(){
+    //분석 조회
+    public ApiResponse<List<Detection>> getAnalyze(){
         try{
             List<Detection> result = detectionMapper.selectAll();
             return ApiResponse.ok(result,200);
         } catch (Exception e) {
             return ApiResponse.fail("파손 조회 실패", 500);
         }
-
     }
+
+    //파손 조회
+    public ApiResponse<List<Detection>> getDetection(){
+        try{
+            List<Detection> result = detectionMapper.selectDetection();
+            return ApiResponse.ok(result,200);
+        } catch (Exception e) {
+            return ApiResponse.fail("파손 조회 실패", 500);
+        }
+    }
+    
+    
 }
