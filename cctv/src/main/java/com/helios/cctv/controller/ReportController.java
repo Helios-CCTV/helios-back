@@ -4,6 +4,7 @@ import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.report.ReportDTO;
 import com.helios.cctv.service.ReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +16,10 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @PostMapping("/save")
+    @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<String>> save(@ModelAttribute ReportDTO report) {
         ApiResponse<String> result = reportService.save(report);
-        if(result.isSuccess()){
-            return ResponseEntity.ok(result);
-        } else{
-            return ResponseEntity.badRequest().body(result);
-        }
+        return result.isSuccess() ? ResponseEntity.ok(result)
+                : ResponseEntity.badRequest().body(result);
     }
 }
