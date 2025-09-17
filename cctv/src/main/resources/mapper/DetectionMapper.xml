@@ -11,6 +11,7 @@
         <id     property="analyzeId" column="analyze_id" />
         <result property="id"        column="cctv_id" />
         <result property="cctvName"  column="cctv_name" />
+        <result property="cctvUrl"   column="cctvUrl"/>
         <result property="date"      column="analyzed_date_str" />
 
         <!-- 자식 컬렉션: damage_type들을 List<String>으로 수집 -->
@@ -26,6 +27,7 @@
             a.id                                   AS analyze_id,
             c.id                                   AS cctv_id,
             c.cctvname                             AS cctv_name,
+            c.cctvUrl                              As cctvUrl,
             DATE_FORMAT(a.analyzed_date, '%Y-%m-%d') AS analyzed_date_str,
             d.damage_type
         FROM analyzes a
@@ -43,6 +45,7 @@
             a.id                                   AS analyze_id,
             c.id                                   AS cctv_id,
             c.cctvname                             AS cctv_name,
+            c.cctvUrl                              As cctvUrl,
             DATE_FORMAT(a.analyzed_date, '%Y-%m-%d') AS analyzed_date_str,
             d.damage_type
         FROM analyzes a
