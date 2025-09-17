@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class CctvApiDTO {
+    private Long id;               //cctvId
     private String roadsectionid;    // 도로 구간 ID
     private String filecreatetime;   // 파일 생성 시간 (YYYYMMDDHH24MISS)
     private String cctvtype;         // CCTV 유형
