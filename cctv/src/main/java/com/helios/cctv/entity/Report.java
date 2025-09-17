@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.util.Arrays;
 
 @Entity
-@Table
+@Table(name="road_damage_reports")
 @Getter
 @Setter
 public class Report {
@@ -72,7 +72,7 @@ public class Report {
         report.setLocation(dto.getLocation());
         report.setSeverity(dto.getSeverity());
         report.setDescription(dto.getDescription());
-        report.setPhotoUrl(dto.getPhotoUrl());
+        report.setPhotoUrl("dto.getPhoto()");
         report.setName(dto.getName());
         report.setContact(dto.getContact());
         report.setReportDate(dto.getReportDate());

@@ -1,6 +1,7 @@
 package com.helios.cctv.dto.report;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +12,7 @@ public class ReportDTO {
     private String location;
     private int severity;
     private String description;
-    private String photoUrl;
+    private MultipartFile photo;
     private String name;
     private String contact;
     private LocalDateTime reportDate;
