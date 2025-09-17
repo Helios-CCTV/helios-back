@@ -236,6 +236,21 @@ public class CctvService {
         }
     }
 
+    //cctv 단일 조회(id)
+    public ApiResponse<CctvApiDTO> findInBoundsOneAsDto(Long id){
+        try{
+            Cctv cctv =  cctvRepository.findById(id).orElse(null);
+            if (cctv == null) {
+                return ApiResponse.fail("해당하는 cctv를 찾을 수 없습니다", 404);
+            } else {
+                return ApiResponse.ok(toDto(cctv),200);
+            }
+        } catch (Exception e) {
+            return ApiResponse.fail("조회 실패",500);
+        }
+
+    }
+
     //cctv검색
     public ApiResponse<List<CctvApiDTO>> search(String search){
         if (search == null || search.isBlank()) return null;

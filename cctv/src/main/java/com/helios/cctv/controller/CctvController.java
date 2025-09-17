@@ -49,5 +49,12 @@ public class CctvController {
         }
     }
 
+    @GetMapping("/one")
+    public ResponseEntity<ApiResponse<CctvApiDTO>> getCctv(@RequestParam Long id){
+        ApiResponse<CctvApiDTO> result = cctvService.findInBoundsOneAsDto(id);
+        return result.isSuccess() ? ResponseEntity.ok(result)
+                : ResponseEntity.badRequest().body(result);
+    }
+
 
 }
