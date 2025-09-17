@@ -254,6 +254,7 @@ public class CctvService {
     //Entity -> DTO 변환
     private CctvApiDTO toDto(Cctv c) {
         CctvApiDTO dto = new CctvApiDTO();
+        dto.setId(c.getId());
         dto.setRoadsectionid(nvl(c.getRoadsectionid()));
         dto.setFilecreatetime(nvl(c.getFilecreatetime()));
         dto.setCctvtype(nvl(c.getCctvtype()));
