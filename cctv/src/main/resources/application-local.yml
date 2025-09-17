@@ -5,6 +5,9 @@ server:
     relaxed-path-chars: '[,]'
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2  # Redisson 자동설정 끄기
   application:
     name: cctv
   config:
@@ -20,16 +23,11 @@ spring:
       hibernate.order_inserts: true
       hibernate.order_updates: true
 
-  data:
-    redis:
-      host: ${REDIS_URL}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-
-  servlet:
-    multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+#  data:
+#    redis:
+#      host: ${REDIS_URL}
+#      port: ${REDIS_PORT}
+#      password: ${REDIS_PASSWORD}
 
   redis:
     redisson:
