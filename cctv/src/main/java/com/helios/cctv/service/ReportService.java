@@ -4,11 +4,13 @@ import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.report.ReportDTO;
 import com.helios.cctv.entity.Report;
 import com.helios.cctv.repository.ReportRepository;
+import com.helios.cctv.repository.projection.ReportListItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
 
+    //신고 저장
     @Transactional
     public ApiResponse<String> save(ReportDTO dto) {
         try {
@@ -61,5 +64,26 @@ public class ReportService {
             return ApiResponse.fail("저장 실패", 500);
         }
     }
+
+    //신고 리스트 조회
+    public ApiResponse<List<ReportListItem>> getAll() {
+        try{
+            List<ReportListItem> list = reportRepository.findAllByOrderByReportDateDesc();
+            return ApiResponse.ok(list,200);
+        } catch (Exception e){
+            return ApiResponse.fail("조회 실패", 500);
+        }
+    }
+
+    //신고 상세 조회
+    public ApiResponse<Report> getById(Long id) {
+        try {
+            Report report = reportRepository.findById(id).orElse(null);
+            return ApiResponse.ok(report,200);
+        } catch (Exception e){
+            return ApiResponse.fail("조회 실패", 500);
+        }
+    }
+
 }
 
