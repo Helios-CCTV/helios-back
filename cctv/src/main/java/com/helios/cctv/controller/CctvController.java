@@ -1,6 +1,6 @@
 package com.helios.cctv.controller;
 
-import com.helios.cctv.dto.cctv.ApiResponse;
+import com.helios.cctv.dto.ApiResponse;
 import com.helios.cctv.dto.cctv.request.GetCctvRequest;
 import com.helios.cctv.service.CctvService;
 import lombok.AllArgsConstructor;
