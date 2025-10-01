@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.helios'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2-SNAPSHOT'
 
 java {
     toolchain {
@@ -31,6 +31,16 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    //cctv 이미지 저장
+    //implementation 'org.springframework.boot:spring-boot-starter-scheduling'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.1'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor' // ★ IDE 메타데이터
+    
+    //로그
+    implementation 'org.slf4j:slf4j-api:2.0.13'
+
 
     //web
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -42,9 +52,37 @@ dependencies {
     //region Type
     implementation 'org.locationtech.jts:jts-core:1.19.0'
 
+    //좌표 변환
+    implementation 'org.locationtech.proj4j:proj4j:1.1.0'
 
     //json 테스트
     implementation 'org.json:json:20240303'
+
+    //GeoJsonWriter
+    // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
+    implementation 'org.locationtech.jts.io:jts-io-common:1.18.2' // Use the latest stable version
+
+    //JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    //redis
+    implementation "org.springframework.boot:spring-boot-starter-data-redis"
+
+    //redisson
+    implementation("org.redisson:redisson-spring-boot-starter:3.50.0")
+    // https://mvnrepository.com/artifact/org.redisson/redisson-spring-data-27
+    implementation("org.redisson:redisson-spring-data-35:3.50.0")
+
+
+    //google guava
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    implementation("com.google.guava:guava:19.0")
+
+    //fasterxml
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
+    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 }
 
 tasks.named('test') {

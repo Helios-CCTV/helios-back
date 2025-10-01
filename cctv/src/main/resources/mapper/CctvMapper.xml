@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helios.cctv.mapper.CctvMapper">
+    <!-- cctv 저장 -->
+    <insert id="insert" parameterType="com.helios.cctv.dto.cctv.CctvDTO">
+        INSERT INTO cctvs (location, latitude, longitude, point, region_id, status)
+        VALUES (
+                   #{cctv.location},
+                   #{cctv.latitude},
+                   #{cctv.longitude},
+                   ST_GeomFromText(#{cctv.wkt}, 5186),
+                   #{cctv.regionId},
+                   'active'
+               )
+    </insert>
+
+</mapper>
