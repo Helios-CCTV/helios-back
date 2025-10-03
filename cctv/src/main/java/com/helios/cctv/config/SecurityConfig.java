@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4000","https://level-up-fit-front.vercel.app/","https://levelupfit.treebomb.org"));
+        config.setAllowedOrigins(List.of("http://localhost:4000","https://www.helios-cctv.org", "https://helios-cctv.org"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
