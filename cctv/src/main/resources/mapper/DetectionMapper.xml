@@ -55,7 +55,7 @@
                            ON d.analyze_id = a.id
         /* 정렬은 동일 analyze_id가 연속되도록 보장하는 것이 컬렉션 매핑에 유리 */
         where a.detection_count > 0
-        ORDER BY a.analyzed_date DESC, a.id ASC, d.id ASC
+        ORDER BY a.analyzed_date ASC, a.id ASC, d.id ASC
     </select>
 
 </mapper>
